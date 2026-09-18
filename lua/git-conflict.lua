@@ -108,7 +108,7 @@ local ANCESTOR_HL = 'GitConflictAncestor'
 local CURRENT_LABEL_HL = 'GitConflictCurrentLabel'
 local INCOMING_LABEL_HL = 'GitConflictIncomingLabel'
 local ANCESTOR_LABEL_HL = 'GitConflictAncestorLabel'
-local PRIORITY = vim.highlight.priorities.user
+local PRIORITY = vim.hl.priorities.user
 local NAMESPACE = api.nvim_create_namespace('git-conflict')
 local AUGROUP_NAME = 'GitConflictCommands'
 
@@ -120,7 +120,7 @@ local conflict_middle = '^======='
 local conflict_end = '^>>>>>>>'
 local conflict_ancestor = '^|||||||'
 
-local DEFAULT_CURRENT_BG_COLOR = 4218238  -- #405d7e
+local DEFAULT_CURRENT_BG_COLOR = 4218238 -- #405d7e
 local DEFAULT_INCOMING_BG_COLOR = 3229523 -- #314753
 local DEFAULT_ANCESTOR_BG_COLOR = 6824314 -- #68217A
 -----------------------------------------------------------------------------//
@@ -184,7 +184,15 @@ end
 ---@param dir string?
 ---@param callback fun(files: table<string, integer[]>, string)
 local function get_conflicted_files(dir, callback)
-  local cmd = { 'git', '-C', dir, 'diff', ('--line-prefix=%s%s'):format(dir, sep), '--name-only', '--diff-filter=U' }
+  local cmd = {
+    'git',
+    '-C',
+    dir,
+    'diff',
+    ('--line-prefix=%s%s'):format(dir, sep),
+    '--name-only',
+    '--diff-filter=U',
+  }
   job(cmd, function(data)
     local files = {}
     for _, filename in ipairs(data) do
@@ -394,7 +402,7 @@ end
 local function parse_buffer(bufnr, range_start, range_end)
   local lines = utils.get_buf_lines(range_start or 0, range_end or -1, bufnr)
   local prev_conflicts = visited_buffers[bufnr].positions ~= nil
-      and #visited_buffers[bufnr].positions > 0
+    and #visited_buffers[bufnr].positions > 0
   local has_conflict, positions = detect_conflicts(lines)
 
   update_visited_buffers(bufnr, positions)
@@ -516,11 +524,36 @@ end
 local function set_plug_mappings()
   local function opts(desc) return { silent = true, desc = 'Git Conflict: ' .. desc } end
 
-  map({ 'n', 'v' }, '<Plug>(git-conflict-ours)', function() M.choose('ours') end, opts('Choose Ours'))
-  map({ 'n', 'v' }, '<Plug>(git-conflict-both)', function() M.choose('both') end, opts('Choose Both'))
-  map({ 'n', 'v' }, '<Plug>(git-conflict-base)', function() M.choose('base') end, opts('Choose Base'))
-  map({ 'n', 'v' }, '<Plug>(git-conflict-none)', function() M.choose('none') end, opts('Choose None'))
-  map({ 'n', 'v' }, '<Plug>(git-conflict-theirs)', function() M.choose('theirs') end, opts('Choose Theirs'))
+  map(
+    { 'n', 'v' },
+    '<Plug>(git-conflict-ours)',
+    function() M.choose('ours') end,
+    opts('Choose Ours')
+  )
+  map(
+    { 'n', 'v' },
+    '<Plug>(git-conflict-both)',
+    function() M.choose('both') end,
+    opts('Choose Both')
+  )
+  map(
+    { 'n', 'v' },
+    '<Plug>(git-conflict-base)',
+    function() M.choose('base') end,
+    opts('Choose Base')
+  )
+  map(
+    { 'n', 'v' },
+    '<Plug>(git-conflict-none)',
+    function() M.choose('none') end,
+    opts('Choose None')
+  )
+  map(
+    { 'n', 'v' },
+    '<Plug>(git-conflict-theirs)',
+    function() M.choose('theirs') end,
+    opts('Choose Theirs')
+  )
   map(
     'n',
     '<Plug>(git-conflict-next-conflict)',
@@ -543,7 +576,12 @@ local function setup_buffer_mappings(bufnr)
   map({ 'n', 'v' }, config.default_mappings.ours, '<Plug>(git-conflict-ours)', opts('Choose Ours'))
   map({ 'n', 'v' }, config.default_mappings.both, '<Plug>(git-conflict-both)', opts('Choose Both'))
   map({ 'n', 'v' }, config.default_mappings.none, '<Plug>(git-conflict-none)', opts('Choose None'))
-  map({ 'n', 'v' }, config.default_mappings.theirs, '<Plug>(git-conflict-theirs)', opts('Choose Theirs'))
+  map(
+    { 'n', 'v' },
+    config.default_mappings.theirs,
+    '<Plug>(git-conflict-theirs)',
+    opts('Choose Theirs')
+  )
   map({ 'v', 'v' }, config.default_mappings.ours, '<Plug>(git-conflict-ours)', opts('Choose Ours'))
   -- map('V', config.default_mappings.ours, '<Plug>(git-conflict-ours)', opts('Choose Ours'))
   map(
@@ -685,8 +723,8 @@ local function quickfix_items_from_positions(item, items, visited_buf)
   for _, pos in ipairs(visited_buf.positions) do
     for key, value in pairs(pos) do
       if
-          vim.tbl_contains({ name_map.ours, name_map.theirs, name_map.base }, key)
-          and not vim.tbl_isempty(value)
+        vim.tbl_contains({ name_map.ours, name_map.theirs, name_map.base }, key)
+        and not vim.tbl_isempty(value)
       then
         local lnum = value.range_start + 1
         local next_item = vim.deepcopy(item)
@@ -771,9 +809,9 @@ function M.choose(side)
           lines = utils.get_buf_lines(data.content_start, data.content_end + 1)
         elseif side == SIDES.BOTH then
           local first =
-              utils.get_buf_lines(position.current.content_start, position.current.content_end + 1)
+            utils.get_buf_lines(position.current.content_start, position.current.content_end + 1)
           local second =
-              utils.get_buf_lines(position.incoming.content_start, position.incoming.content_end + 1)
+            utils.get_buf_lines(position.incoming.content_start, position.incoming.content_end + 1)
           lines = vim.list_extend(first, second)
         elseif side == SIDES.NONE then
           lines = {}
@@ -808,9 +846,9 @@ function M.choose(side)
     lines = utils.get_buf_lines(data.content_start, data.content_end + 1)
   elseif side == SIDES.BOTH then
     local first =
-        utils.get_buf_lines(position.current.content_start, position.current.content_end + 1)
+      utils.get_buf_lines(position.current.content_start, position.current.content_end + 1)
     local second =
-        utils.get_buf_lines(position.incoming.content_start, position.incoming.content_end + 1)
+      utils.get_buf_lines(position.incoming.content_start, position.incoming.content_end + 1)
     lines = vim.list_extend(first, second)
   elseif side == SIDES.NONE then
     lines = {}
